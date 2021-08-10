@@ -34,9 +34,11 @@ if [[ "$($CONTAINER_BIN images -q raspberry-pi-crosscompile 2> /dev/null)" == ""
 	fi
 fi
 
-rm boot/* rootfs/*
+sudo rm boot/* rootfs/* -rf
 
+pushd ..
 make clean
+popd
 
 $CONTAINER_BIN run -it --rm \
     --env KERNEL=$KERNEL --env ARCH_=$ARCH_ --env CROSS_COMPILE_=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ \
