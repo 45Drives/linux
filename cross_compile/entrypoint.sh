@@ -27,6 +27,7 @@ echo
 
 echo "################################################################"
 echo "Installing Modules to ./rootfs/"
+mkdir -p /rootfs_out/usr
 env PATH=$PATH make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ INSTALL_MOD_PATH=/rootfs_out INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
 [[ "$?" != "0" ]] && exit 1
 echo
