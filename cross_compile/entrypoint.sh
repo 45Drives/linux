@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
+rm .config -f
+echo "################################################################"
+echo "Generating default config..."
+make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ bcm2711_defconfig
+[[ "$?" != "0" ]] && exit 1
+
 read -p "Customize config? [y/N]: " RESP
 if [[ "$RESP" =~ ^[yY]([eE][sS])?$ ]]; then
-    echo "################################################################"
-    echo "Generating default config..."
-    make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ bcm2711_defconfig
-    [[ "$?" != "0" ]] && exit 1
 
     vim .config
 
@@ -19,13 +21,13 @@ fi
 
 echo "################################################################"
 echo "Compiling Kernel..."
-make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ $IMAGE_ modules dtbs
+make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ $IMAGE_ modules dtbs headers
 [[ "$?" != "0" ]] && exit 1
 echo
 
 echo "################################################################"
 echo "Installing Modules to ./rootfs/"
-env PATH=$PATH make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ INSTALL_MOD_PATH=/rootfs_out modules_install
+env PATH=$PATH make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ INSTALL_MOD_PATH=/rootfs_out INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
 [[ "$?" != "0" ]] && exit 1
 echo
 
