@@ -37,7 +37,7 @@ fi
 sudo rm boot/* rootfs/* -rf
 
 pushd ..
-make clean
+sudo make clean
 popd
 
 $CONTAINER_BIN run -it --rm \
