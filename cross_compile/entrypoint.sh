@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
+echo "################################################################"
+echo "Cleaning from previous builds..."
 rm .config -f
+make clean
+
 echo "################################################################"
 echo "Generating default config..."
 make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ bcm2711_defconfig

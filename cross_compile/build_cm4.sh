@@ -36,10 +36,6 @@ fi
 
 sudo rm boot/* rootfs/* -rf
 
-pushd ..
-make clean
-popd
-
 $CONTAINER_BIN run -it --rm \
     --env KERNEL=$KERNEL --env ARCH_=$ARCH_ --env CROSS_COMPILE_=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ \
     -v $(pwd)/..:/root/linux -v $(pwd)/boot:/boot_out -v $(pwd)/rootfs:/rootfs_out -v $(pwd)/configs:/config_out \
