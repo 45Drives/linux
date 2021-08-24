@@ -5817,7 +5817,8 @@ _base_mpi_ep_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_loc
  * care of 32 bit environment where its not quarenteed to send the entire word
  * in one transfer.
  */
-#if defined(writeq) && defined(CONFIG_64BIT)
+//#if defined(writeq) && defined(CONFIG_64BIT)
+#if 0
 static inline void
 _base_writeq(__u64 b, volatile void __iomem *addr, spinlock_t *writeq_lock)
 {
