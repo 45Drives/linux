@@ -10,6 +10,7 @@ usage() {
 # kernel8 for arm64, kernel7l for 32-bit
 ARCH_CHOSEN=0
 SKIP_PROMPT=0
+ZFS_ONLY=0
 for arg in "$@"; do
     case $arg in
         "32")
@@ -30,6 +31,9 @@ for arg in "$@"; do
             ;;
         "-y")
             SKIP_PROMPT=1
+            ;;
+        "-z")
+            ZFS_ONLY=1
             ;;
         "-h")
             usage
@@ -62,7 +66,7 @@ fi
 sudo rm boot/* rootfs/* -rf
 
 $CONTAINER_BIN run -it --rm \
-    --env KERNEL=$KERNEL --env ARCH_=$ARCH_ --env CROSS_COMPILE_=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ --env SKIP_PROMPT=$SKIP_PROMPT \
+    --env KERNEL=$KERNEL --env ARCH_=$ARCH_ --env CROSS_COMPILE_=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ --env SKIP_PROMPT=$SKIP_PROMPT --env ZFS_ONLY=$ZFS_ONLY \
     -v $(pwd)/..:/root/linux -v $(pwd)/boot:/boot_out -v $(pwd)/rootfs:/rootfs_out -v $(pwd)/configs:/config_out \
     raspberry-pi-crosscompile \
     entrypoint.sh
