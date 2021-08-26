@@ -1,16 +1,11 @@
 #!/usr/bin/env bash
 
 echo "################################################################"
-echo "Cleaning from previous builds..."
-rm .config -f
-make clean
-
-echo "################################################################"
 echo "Generating default config..."
 make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ bcm2711_defconfig
 [[ "$?" != "0" ]] && exit 1
 
-read -p "Customize config? [y/N]: " RESP
+[[ "$SKIP_PROMPT" == "0" ]] && read -p "Customize config? [y/N]: " RESP || RESP=N
 if [[ "$RESP" =~ ^[yY]([eE][sS])?$ ]]; then
 
     vim .config
@@ -44,6 +39,23 @@ cp -p arch/$ARCH_/boot/dts/broadcom/*.dtb /boot_out/
 cp -p arch/$ARCH_/boot/dts/overlays/*.dtb* /boot_out/overlays/
 cp -p arch/$ARCH_/boot/dts/overlays/README /boot_out/overlays/
 echo
+
+if [[ -f cross_compile/zfs/autogen.sh ]]; then
+    echo "################################################################"
+    echo "Building ZFS DKMS"
+    mkdir -p /usr/include/sys
+    ln -snf /usr/${CROSS_COMPILE_: : -1}/include/asm/byteorder.h /usr/include/sys/byteorder.h
+    pushd cross_compile/zfs
+    ./autogen.sh
+    ./configure --with-linux=../../ --host=$(echo $CROSS_COMPILE_ | cut -d'-' -f1) CFLAGS="-I./include -I./include/os/linux/zfs -I/usr/${CROSS_COMPILE_: : -1}/include"
+    [[ "$?" != "0" ]] && echo ZFS configure failed. && exit 1
+    make -j$(nproc)
+    [[ "$?" != "0" ]] && echo ZFS build failed. && exit 1
+    make DESTDIR=/rootfs_out install
+    [[ "$?" != "0" ]] && echo ZFS install failed. && exit 1
+    popd
+    echo
+fi
 
 echo "################################################################"
 echo "Kernel Compilation Complete."
