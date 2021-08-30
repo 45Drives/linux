@@ -1,3 +1,26 @@
+diff --git a/config/kernel-config-defined.m4 b/config/kernel-config-defined.m4
+index 9b9468269..9ec40bf78 100644
+--- a/config/kernel-config-defined.m4
++++ b/config/kernel-config-defined.m4
+@@ -91,15 +91,15 @@ AC_DEFUN([ZFS_AC_KERNEL_SRC_CONFIG_DEBUG_LOCK_ALLOC], [
+ 
+ AC_DEFUN([ZFS_AC_KERNEL_CONFIG_DEBUG_LOCK_ALLOC], [
+ 	AC_MSG_CHECKING([whether mutex_lock() is GPL-only])
+-	ZFS_LINUX_TEST_RESULT([config_debug_lock_alloc_license], [
+-		AC_MSG_RESULT(no)
+-	],[
++	ZFS_LINUX_TEST_RESULT([config_debug_lock_alloc_license],[
+ 		AC_MSG_RESULT(yes)
+ 		AC_MSG_ERROR([
+ 	*** Kernel built with CONFIG_DEBUG_LOCK_ALLOC which is incompatible
+ 	*** with the CDDL license and will prevent the module linking stage
+ 	*** from succeeding.  You must rebuild your kernel without this
+ 	*** option enabled.])
++	],[
++		AC_MSG_RESULT(no)
+ 	])
+ ])
+ 
 diff --git a/config/kernel.m4 b/config/kernel.m4
 index 7196e66ca..932fbb8f1 100644
 --- a/config/kernel.m4
