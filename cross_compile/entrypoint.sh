@@ -24,7 +24,7 @@ fi
 
 echo "################################################################"
 echo "Initializing kernel for building"
-make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ prepare scripts
+make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ prepare scripts modules_prepare
 echo
 
 if [[ $BUILD_ZFS ]]; then
@@ -35,10 +35,11 @@ if [[ $BUILD_ZFS ]]; then
     git reset HEAD --hard
     git apply ../zfs_config_kernel.patch
     sh autogen.sh
-    ./configure --prefix=/ --libdir=/usr/lib/${CROSS_COMPILE_: : -1} \
-        --includedir=/usr/include/${CROSS_COMPILE_: : -1} --dataroot=/usr/${CROSS_COMPILE_: : -1}/share \
-        --enable-linux-builtin=yes --with-linux=/root/linux --with-linux-obj=/root/linux \
-        --host=${CROSS_COMPILE_: : -1}
+    ./configure --with-linux=/root/linux --with-linux-obj=/root/linux --host=${CROSS_COMPILE_: : -1} --enable-linux-builtin=yes --with-config=kernel
+    # ./configure --prefix=/ --libdir=/usr/lib/${CROSS_COMPILE_: : -1} \
+    #     --includedir=/usr/include/${CROSS_COMPILE_: : -1} --dataroot=/usr/${CROSS_COMPILE_: : -1}/share \
+    #     --enable-linux-builtin=yes --with-linux=/root/linux --with-linux-obj=/root/linux \
+    #     --host=${CROSS_COMPILE_: : -1}
     [[ "$?" != "0" ]] && echo ZFS configure failed. && exit 1
     ./copy-builtin /root/linux
     make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ -j$(nproc)
