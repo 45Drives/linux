@@ -45,17 +45,19 @@ fi
 if [[ -f cross_compile/zfs/autogen.sh ]]; then
     echo "################################################################"
     echo "Building ZFS DKMS"
-    mv /usr/include /usr/include.bak
-    ln -snf /usr/${CROSS_COMPILE_ : : -1}/include /usr/include
+    # mv /usr/include /usr/include.bak
+    # ln -snf /usr/${CROSS_COMPILE_ : : -1}/include /usr/include
     # mkdir -p /usr/include/{sys,linux}
-    # ln -snf /usr/${CROSS_COMPILE_: : -1}/include/asm/byteorder.h /usr/include/sys/byteorder.h
+    ln -snf /usr/${CROSS_COMPILE_: : -1}/include/asm/byteorder.h /usr/${CROSS_COMPILE_: : -1}/include/sys/byteorder.h
     pushd cross_compile/zfs
+    git clean -fX
+    # export C_INCLUDE_PATH = /usr/${CROSS_COMPILE_: : -1}/include $(pwd)/include/os/linux/spl/ $C_INCLUDE_PATH
     # ln -snf $(pwd)/include/os/linux/zfs/sys/zfs_context_os.h /usr/include/sys/zfs_context_os.h
     # ln -snf $(pwd)/include/os/linux/kernel/linux/dcache_compat.h /usr/include/linux/dcache_compat.h
     ./autogen.sh
-    ./configure --with-linux=$(pwd)/../../ --host=$(echo $CROSS_COMPILE_ | cut -d'-' -f1) CFLAGS="-g -O2"
+    ./configure --with-linux=$(pwd)/../../ --host=${CROSS_COMPILE_: : -1} --with-sysroot=/usr/${CROSS_COMPILE_: : -1} #CFLAGS="-g -O2 -I./include/os/linux/spl -I./include/os/linux/zfs -I../../include"
     [[ "$?" != "0" ]] && echo ZFS configure failed. && exit 1
-    make -j$(nproc)
+    make -j$(nproc) # CFLAGS="-g -O2 -I./include/os/linux/spl -I./include/os/linux/spl -I../../include"
     [[ "$?" != "0" ]] && echo ZFS build failed. && exit 1
     make DESTDIR=/rootfs_out install
     [[ "$?" != "0" ]] && echo ZFS install failed. && exit 1
