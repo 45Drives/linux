@@ -1,3 +1,19 @@
+# Storinator JR Kernel
+## Cross Compilation Steps
+### Prerequisites
+You must have docker or podman installed. If you want to use podman, edit cross_compile/build_cm4.sh and change `CONTAINER_BIN=docker` to `CONTAINER_BIN=podman`.
+### Compiling
+```bash
+git clone https://github.com/45Drives/linux.git
+cd linux
+git submodule update --init # run if you want zfs module
+cd cross_compile
+./build_cm4 64 -y # omit -y if you want to customize config
+```
+### Installing
+Once compilation is complete, the files are installed to `cross_compile/rootfs/` and `cross_compile/boot/`.
+Copy files from `rootfs/` into the root partition of the Pi and files from `boot/` into the boot partition.
+
 Linux kernel
 ============
 
