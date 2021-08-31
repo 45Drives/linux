@@ -2,7 +2,7 @@
 
 BUILD_ZFS=$([[ -f cross_compile/zfs/autogen.sh ]] && echo 1 || echo 0)
 
-make distclean
+make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ distclean
 
 echo "################################################################"
 echo "Generating default config..."
@@ -35,7 +35,7 @@ if [[ $BUILD_ZFS ]]; then
     git reset HEAD --hard
     git apply ../zfs_config_kernel.patch
     sh autogen.sh
-    ./configure --with-linux=/root/linux --with-linux-obj=/root/linux --host=${CROSS_COMPILE_: : -1} --enable-linux-builtin=yes --with-config=kernel
+    ./configure --with-linux=/root/linux --with-linux-obj=/root/linux --host=${CROSS_COMPILE_: : -1} --enable-linux-builtin=yes
     # ./configure --prefix=/ --libdir=/usr/lib/${CROSS_COMPILE_: : -1} \
     #     --includedir=/usr/include/${CROSS_COMPILE_: : -1} --dataroot=/usr/${CROSS_COMPILE_: : -1}/share \
     #     --enable-linux-builtin=yes --with-linux=/root/linux --with-linux-obj=/root/linux \
