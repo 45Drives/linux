@@ -63,10 +63,16 @@ if [[ "$($CONTAINER_BIN images -q raspberry-pi-crosscompile 2> /dev/null)" == ""
 	fi
 fi
 
-sudo rm boot/* rootfs/* -rf
+sudo rm boot rootfs -rf
+mkdir -p rootfs/usr/{bin,sbin,lib}
+ln -snf usr/bin rootfs/bin
+ln -snf usr/lib rootfs/lib
+ln -snf usr/sbin rootfs/sbin
 
 $CONTAINER_BIN run -it --rm \
     --env KERNEL=$KERNEL --env ARCH=$ARCH_ --env CROSS_COMPILE=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ --env SKIP_PROMPT=$SKIP_PROMPT --env ZFS_ONLY=$ZFS_ONLY \
     -v $(pwd)/..:/root/linux -v $(pwd)/boot:/boot_out -v $(pwd)/rootfs:/rootfs_out -v $(pwd)/configs:/config_out \
     raspberry-pi-crosscompile \
     entrypoint.sh
+
+rm -f rootfs/bin rootfs/lib rootfs/sbin
