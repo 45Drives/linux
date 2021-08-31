@@ -2,77 +2,88 @@
 
 BUILD_ZFS=$([[ -f cross_compile/zfs/autogen.sh ]] && echo 1 || echo 0)
 
-make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ distclean
+if [[ "$ZFS_ONLY" != "1" ]]; then
+    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE distclean
 
-echo "################################################################"
-echo "Generating default config..."
-make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ bcm2711_defconfig
-[[ "$?" != "0" ]] && exit 1
-
-[[ "$SKIP_PROMPT" == "0" ]] && read -p "Customize config? [y/N]: " RESP || RESP=N
-if [[ "$RESP" =~ ^[yY]([eE][sS])?$ ]]; then
-
-    vim .config
-
-    make savedefconfig
+    echo "################################################################"
+    echo "Generating default config..."
+    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE bcm2711_defconfig
     [[ "$?" != "0" ]] && exit 1
 
-    mv defconfig /config_out
-    echo "New defconfig in ./config_out/"
+    [[ "$SKIP_PROMPT" == "0" ]] && read -p "Customize config? [y/N]: " RESP || RESP=N
+    if [[ "$RESP" =~ ^[yY]([eE][sS])?$ ]]; then
+
+        vim .config
+
+        make savedefconfig
+        [[ "$?" != "0" ]] && exit 1
+
+        mv defconfig /config_out
+        echo "New defconfig in ./config_out/"
+        echo
+    fi
+
+    echo "################################################################"
+    echo "Initializing kernel for building"
+    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE prepare scripts
+    echo
+
+    echo "################################################################"
+    echo "Compiling Kernel..."
+    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE $IMAGE_ modules dtbs headers
+    [[ "$?" != "0" ]] && exit 1
     echo
 fi
 
-echo "################################################################"
-echo "Initializing kernel for building"
-make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ prepare scripts modules_prepare
-echo
-
-if [[ $BUILD_ZFS ]]; then
+if [[ $BUILD_ZFS ]] && [[ "$ARCH" != "arm" ]]; then
     echo "################################################################"
-    echo "Building ZFS"
+    echo "Configuring ZFS"
     pushd cross_compile/zfs
     git clean -fX
     git reset HEAD --hard
-    git apply ../zfs_config_kernel.patch
     sh autogen.sh
-    ./configure --with-linux=/root/linux --with-linux-obj=/root/linux --host=${CROSS_COMPILE_: : -1} --enable-linux-builtin=yes
-    # ./configure --prefix=/ --libdir=/usr/lib/${CROSS_COMPILE_: : -1} \
-    #     --includedir=/usr/include/${CROSS_COMPILE_: : -1} --dataroot=/usr/${CROSS_COMPILE_: : -1}/share \
-    #     --enable-linux-builtin=yes --with-linux=/root/linux --with-linux-obj=/root/linux \
-    #     --host=${CROSS_COMPILE_: : -1}
+    ./configure --with-linux=/root/linux --with-linux-obj=/root/linux --host=${CROSS_COMPILE: : -1}
     [[ "$?" != "0" ]] && echo ZFS configure failed. && exit 1
-    ./copy-builtin /root/linux
-    make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ -j$(nproc)
+    echo
+    echo "################################################################"
+    echo "Building ZFS"
+    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j$(nproc)
     [[ "$?" != "0" ]] && echo ZFS build failed. && exit 1
-    make install
+    echo
+    echo "################################################################"
+    echo "Installing ZFS to cross_compile/rootfs/"
+    make DESTDIR=/rootfs_out install
     [[ "$?" != "0" ]] && echo ZFS install failed. && exit 1
     popd
-    echo CONFIG_ZFS=Y >> ./config
+    echo
+elif [[ $BUILD_ZFS ]]; then
+    echo "################################################################"
+    echo "Cannot build ZFS for 32 bit kernel. Skipping."
     echo
 fi
 
-echo "################################################################"
-echo "Compiling Kernel..."
-make -j$(nproc) ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ deb-pkg # $IMAGE_ modules dtbs headers
-[[ "$?" != "0" ]] && exit 1
-mv /root/*.deb cross_compile/
-echo
+if [[ "$ZFS_ONLY" != "1" ]]; then
+    echo "################################################################"
+    echo "Building Kernel Modules"
+    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE modules
+    [[ "$?" != "0" ]] && exit 1
+    echo
+    echo "################################################################"
+    echo "Installing Modules to ./rootfs/"
+    mkdir -p /rootfs_out/usr
+    env PATH=$PATH make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE INSTALL_MOD_PATH=/rootfs_out/usr INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
+    [[ "$?" != "0" ]] && exit 1
+    echo
 
-# echo "################################################################"
-# echo "Installing Modules to ./rootfs/"
-# mkdir -p /rootfs_out/usr
-# env PATH=$PATH make ARCH=$ARCH_ CROSS_COMPILE=$CROSS_COMPILE_ INSTALL_MOD_PATH=/rootfs_out/usr INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
-# [[ "$?" != "0" ]] && exit 1
-# echo
-
-# echo "################################################################"
-# echo "Installing Kernel and Overlays to ./boot/"
-# mkdir -p /boot_out/overlays
-# cp -p arch/$ARCH_/boot/$IMAGE_ /boot_out/$KERNEL.img
-# cp -p arch/$ARCH_/boot/dts/broadcom/*.dtb /boot_out/
-# cp -p arch/$ARCH_/boot/dts/overlays/*.dtb* /boot_out/overlays/
-# cp -p arch/$ARCH_/boot/dts/overlays/README /boot_out/overlays/
-# echo
+    echo "################################################################"
+    echo "Installing Kernel and Overlays to ./boot/"
+    mkdir -p /boot_out/overlays
+    cp -p arch/$ARCH/boot/$IMAGE_ /boot_out/$KERNEL.img
+    cp -p arch/$ARCH/boot/dts/broadcom/*.dtb /boot_out/
+    cp -p arch/$ARCH/boot/dts/overlays/*.dtb* /boot_out/overlays/
+    cp -p arch/$ARCH/boot/dts/overlays/README /boot_out/overlays/
+    echo
+fi
 
 echo "################################################################"
 echo "Kernel Compilation Complete."

@@ -37,7 +37,7 @@ fi
 sudo rm boot/* rootfs/* -rf
 
 $CONTAINER_BIN run -it --rm \
-    --env KERNEL=$KERNEL --env ARCH_=$ARCH_ --env CROSS_COMPILE_=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ \
+    --env KERNEL=$KERNEL --env ARCH=$ARCH_ --env CROSS_COMPILE=$CROSS_COMPILE_ --env IMAGE_=$IMAGE_ \
     -v $(pwd)/..:/root/linux -v $(pwd)/boot:/boot_out -v $(pwd)/rootfs:/rootfs_out -v $(pwd)/configs:/config_out \
     raspberry-pi-crosscompile \
     bash
