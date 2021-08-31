@@ -3,11 +3,11 @@
 BUILD_ZFS=$([[ -f cross_compile/zfs/autogen.sh ]] && echo 1 || echo 0)
 
 if [[ "$ZFS_ONLY" != "1" ]]; then
-    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE distclean
+    make distclean
 
     echo "################################################################"
     echo "Generating default config..."
-    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE bcm2711_defconfig
+    make -j$(nproc) bcm2711_defconfig
     [[ "$?" != "0" ]] && exit 1
 
     [[ "$SKIP_PROMPT" == "0" ]] && read -p "Customize config? [y/N]: " RESP || RESP=N
@@ -25,12 +25,12 @@ if [[ "$ZFS_ONLY" != "1" ]]; then
 
     echo "################################################################"
     echo "Initializing kernel for building"
-    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE prepare scripts
+    make -j$(nproc) prepare scripts
     echo
 
     echo "################################################################"
     echo "Compiling Kernel..."
-    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE $IMAGE_ modules dtbs headers
+    make -j$(nproc) $IMAGE_ modules dtbs headers
     [[ "$?" != "0" ]] && exit 1
     echo
 fi
@@ -47,7 +47,7 @@ if [[ $BUILD_ZFS ]] && [[ "$ARCH" != "arm" ]]; then
     echo
     echo "################################################################"
     echo "Building ZFS"
-    make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE -j$(nproc)
+    make -j$(nproc)
     [[ "$?" != "0" ]] && echo ZFS build failed. && exit 1
     echo
     echo "################################################################"
@@ -66,7 +66,7 @@ if [[ "$ZFS_ONLY" != "1" ]]; then
     echo "################################################################"
     echo "Installing Modules to ./rootfs/"
     mkdir -p /rootfs_out/usr
-    env PATH=$PATH make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE INSTALL_MOD_PATH=/rootfs_out/usr INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
+    env PATH=$PATH make INSTALL_MOD_PATH=/rootfs_out/usr INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
     [[ "$?" != "0" ]] && exit 1
     echo
 
