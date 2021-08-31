@@ -86,6 +86,3 @@ echo
 echo "Copy files from ./rootfs/ to / of the RPI and"
 echo "files from ./boot/ to /boot of the RPI."
 echo
-echo "Also copy the entire kernel source directory to /root/linux on"
-echo "the RPI for module compilation, excluding the cross_compilation/"
-echo "directory."
