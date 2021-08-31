@@ -64,11 +64,6 @@ fi
 
 if [[ "$ZFS_ONLY" != "1" ]]; then
     echo "################################################################"
-    echo "Building Kernel Modules"
-    make -j$(nproc) ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE modules
-    [[ "$?" != "0" ]] && exit 1
-    echo
-    echo "################################################################"
     echo "Installing Modules to ./rootfs/"
     mkdir -p /rootfs_out/usr
     env PATH=$PATH make ARCH=$ARCH CROSS_COMPILE=$CROSS_COMPILE INSTALL_MOD_PATH=/rootfs_out/usr INSTALL_HDR_PATH=/rootfs_out/usr modules_install headers_install
